@@ -1,5 +1,9 @@
 #!/bin/bash
 # Startup script for Moltbot in Cloudflare Sandbox
+# Updated for Moonshot Kimi K2.5 - 2026-02-05
+
+set -e
+
 # This script:
 # 1. Restores config from R2 backup if available
 # 2. Configures moltbot from environment variables
