@@ -437,9 +437,6 @@ async function scheduled(
   }
 }
 
-// Export Durable Object for wrangler.jsonc binding
-export { MoltbotDurableObject } from './durable-object';
-
 export default {
   fetch: app.fetch,
   scheduled,
