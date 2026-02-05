@@ -47,12 +47,8 @@
   },
   "migrations": [
     {
-      "tag": "v1",
-      "delete_classes": ["MoltbotDurableObject"]
-    },
-    {
-      "tag": "v2", 
-      "new_sqlite_classes": ["Sandbox"]
+      "new_sqlite_classes": ["Sandbox"],
+      "tag": "v1"
     }
   ],
   "r2_buckets": [
