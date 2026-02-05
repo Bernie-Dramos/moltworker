@@ -1,9 +1,8 @@
 {
-  "name": "moltworker-kimi",
+  "name": "moltworker",
   "main": "src/index.ts",
   "compatibility_date": "2026-02-06",
   
-  // Durable Object bindings - REQUIRED for state management
   "durable_objects": {
     "bindings": [
       {
@@ -13,16 +12,17 @@
     ]
   },
   
-  // R2 bucket for persistent file storage
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["MoltbotDurableObject"]
+    }
+  ],
+  
   "r2_buckets": [
     {
       "binding": "MOLTBOT_FILES",
       "bucket_name": "moltbot-data"
     }
-  ],
-  
-  // Enable Containers (Sandbox) - REQUIRED for Moltworker
-  "containers": {
-    "enabled": true
-  }
+  ]
 }
