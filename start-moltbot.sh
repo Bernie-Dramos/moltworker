@@ -222,14 +222,52 @@ if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_APP_TOKEN) {
     config.channels.slack.enabled = true;
 }
 
-// Base URL override (e.g., for Cloudflare AI Gateway)
+// Base URL override (e.g., for Cloudflare AI Gateway or direct API)
 // Usage: Set AI_GATEWAY_BASE_URL or ANTHROPIC_BASE_URL to your endpoint like:
 //   https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/anthropic
 //   https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai
+//   https://api.moonshot.ai/v1 (direct Moonshot API)
 const baseUrl = (process.env.AI_GATEWAY_BASE_URL || process.env.ANTHROPIC_BASE_URL || '').replace(/\/+$/, '');
 const isOpenAI = baseUrl.endsWith('/openai');
+const isMoonshot = baseUrl.includes('moonshot');
 
-if (isOpenAI) {
+if (isMoonshot) {
+    // Configure Moonshot Kimi K2.5 provider (OpenAI-compatible API)
+    console.log('Configuring Moonshot Kimi provider with base URL:', baseUrl);
+    config.models = config.models || {};
+    config.models.providers = config.models.providers || {};
+    
+    // Check if thinking mode should be disabled
+    const thinkingDisabled = process.env.KIMI_THINKING_MODE === 'disabled';
+    
+    const providerConfig = {
+        baseUrl: baseUrl,
+        api: 'openai',
+        models: [
+            { 
+                id: 'kimi-k2.5', 
+                name: 'Kimi K2.5', 
+                contextWindow: 256000,
+                // Note: extraBody for thinking mode is handled at request time by moltbot
+            }
+        ]
+    };
+    
+    // Include API key in provider config
+    if (process.env.MOONSHOT_API_KEY) {
+        providerConfig.apiKey = process.env.MOONSHOT_API_KEY;
+    }
+    
+    config.models.providers.moonshot = providerConfig;
+    
+    // Add model to the allowlist
+    config.agents.defaults.models = config.agents.defaults.models || {};
+    config.agents.defaults.models['moonshot/kimi-k2.5'] = { alias: 'Kimi K2.5' };
+    config.agents.defaults.model.primary = 'moonshot/kimi-k2.5';
+    
+    console.log('Kimi thinking mode:', thinkingDisabled ? 'disabled (instant)' : 'enabled (reasoning)');
+    
+} else if (isOpenAI) {
     // Create custom openai provider config with baseUrl override
     // Omit apiKey so moltbot falls back to OPENAI_API_KEY env var
     console.log('Configuring OpenAI provider with base URL:', baseUrl);
@@ -250,6 +288,7 @@ if (isOpenAI) {
     config.agents.defaults.models['openai/gpt-5'] = { alias: 'GPT-5' };
     config.agents.defaults.models['openai/gpt-4.5-preview'] = { alias: 'GPT-4.5' };
     config.agents.defaults.model.primary = 'openai/gpt-5.2';
+    
 } else if (baseUrl) {
     console.log('Configuring Anthropic provider with base URL:', baseUrl);
     config.models = config.models || {};
@@ -274,6 +313,7 @@ if (isOpenAI) {
     config.agents.defaults.models['anthropic/claude-sonnet-4-5-20250929'] = { alias: 'Sonnet 4.5' };
     config.agents.defaults.models['anthropic/claude-haiku-4-5-20251001'] = { alias: 'Haiku 4.5' };
     config.agents.defaults.model.primary = 'anthropic/claude-opus-4-5-20251101';
+    
 } else {
     // Default to Anthropic without custom base URL (uses built-in pi-ai catalog)
     config.agents.defaults.model.primary = 'anthropic/claude-opus-4-5';
